@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, QSortFilterProxyModel, Qt
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtMultimedia import QMediaPlaylist, QMediaContent, QMediaPlayer
 import pandas as pd
+from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit
+from tqdm import tqdm
+
 from customwidgets import OnOffWidget
 
 class Ui_MainWindow(object):
@@ -10,6 +14,61 @@ class Ui_MainWindow(object):
     def read_dataset(self):
         self.anime = pd.read_csv('../animeList.csv')
         self.rating = pd.read_csv('../Rate.csv')
+
+    def anime_list(self):
+        anime_list = list(pd.unique(self.anime['name']))
+        anime_check_model = QStandardItemModel(len(anime_list), 1)
+        for row, i in tqdm(enumerate(anime_list)):
+            it = QStandardItem(str(i))
+            it.setEditable(False)
+            it.setCheckable(True)
+            anime_check_model.setItem(row, 0, it)
+            anime_check_model.setHorizontalHeaderLabels(['Список пользователей'])
+
+        filter_proxy_model = QSortFilterProxyModel()
+        filter_proxy_model.setSourceModel(anime_check_model)
+        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        filter_proxy_model.setFilterKeyColumn(0)
+        table = QTableView()
+        table.setStyleSheet('font-size: 12px;'
+                                  'font-family: Arial;'
+                                  'border: none;'
+                                  'background-color: rgb(255,255,255,0);')
+        table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table.horizontalHeader().setStyleSheet('border: none;')
+        table.verticalHeader().setStyleSheet('border: none;')
+        table.setModel(filter_proxy_model)
+        self.PlainTextAnime.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        self.formLayout.addWidget(table)
+
+    def user_list(self):
+        user_list = list(pd.unique(self.rating['user_id']))
+        # user_list = list(pd.unique(self.rating.user_id))
+        user_check_model = QStandardItemModel(len(user_list), 1)
+        for row, i in tqdm(enumerate(user_list)):
+            it = QStandardItem(str(i))
+            it.setEditable(False)
+            it.setCheckable(True)
+            user_check_model.setItem(row, 0, it)
+            user_check_model.setHorizontalHeaderLabels(['Список пользователей'])
+
+        filter_proxy_model = QSortFilterProxyModel()
+        filter_proxy_model.setSourceModel(user_check_model)
+        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        filter_proxy_model.setFilterKeyColumn(0)
+        table_users = QTableView()
+        table_users.setStyleSheet('font-size: 12px;'
+                                  'font-family: Arial;'
+                                  'border: none;'
+                                  'background-color: rgb(255,255,255,0);')
+        table_users.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table_users.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table_users.horizontalHeader().setStyleSheet('border: none;')
+        table_users.verticalHeader().setStyleSheet('border: none;')
+        table_users.setModel(filter_proxy_model)
+        self.PlainTextUsers.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        self.formLayout_2.addWidget(table_users)
 
     def setupUi(self, MainWindow):
         # Читаем датасет
@@ -144,7 +203,7 @@ class Ui_MainWindow(object):
         font.setFamily("Arial")
         font.setPointSize(11)
         font.setBold(True)
-        self.anime_name = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
+        '''self.anime_name = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
         self.anime_name.setObjectName("anime_name")
         self.anime_name.setText("Название")
         self.anime_name.setFont(font)
@@ -156,25 +215,25 @@ class Ui_MainWindow(object):
         self.genres.setFont(font)
         self.genres.setAlignment(QtCore.Qt.AlignCenter)
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.genres)
-        self.label_10 = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
-        self.label_10.setObjectName("label_10")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_10)
+        '''
         # --------------------/>
+        self.anime_list()
 
         self.ScrollAreaAnime.setWidget(self.ScrollAreaAnime_layout)
         self.LeftPanel.addWidget(self.ScrollAreaAnime)
 
         # Поисковая строка с пользователями ------------ Уровень 0.1.3
-        self.PlainTextUsers = QtWidgets.QLineEdit(self.centralwidget)
+        self.PlainTextUsers = QLineEdit(self.centralwidget)
         self.PlainTextUsers.setStyleSheet("font: 12pt \"Arial\";\n"
-                                          " border-radius:5px;\n"
+                                          "border-radius:5px;\n"
                                           "background-color: rgb(255, 255, 255, 200);")
         self.PlainTextUsers.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.PlainTextUsers.setObjectName("PlainTextUsers")
+
         self.LeftPanel.addWidget(self.PlainTextUsers)
 
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
-        self.ScrollAreaUsers = QtWidgets.QScrollArea(self.centralwidget)
+        self.ScrollAreaUsers = QtWidgets.QScrollArea()
         self.ScrollAreaUsers.setStyleSheet("QScrollBar:vertical {\n"
                                            "    border: 4px;\n"
                                            "    background-color: rgb(255, 255, 255, 50);\n"
@@ -214,6 +273,8 @@ class Ui_MainWindow(object):
         self.ScrollAreaUsers_layout.setObjectName("ScrollAreaUsers_layout")
         self.formLayout_2 = QtWidgets.QVBoxLayout(self.ScrollAreaUsers_layout)
         self.formLayout_2.setObjectName("formLayout_2")
+        # Добавляем список элементов пользователей
+        self.user_list()
 
         # <\------------ Уровни 0.1.4.x
 
@@ -394,7 +455,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowIcon(QtGui.QIcon('assets/iconWindow.png'))
         self.MainLabel.setText(_translate("MainWindow", "Рекомендательная система для подбора аниме"))
         self.PlainTextAnime.setPlaceholderText(_translate("MainWindow", "Введите название аниме"))
-        self.label_10.setText(_translate("MainWindow", "TextLabel"))
         self.PlainTextUsers.setPlaceholderText(_translate("MainWindow", "Введите имя пользователя"))
         '''
         self.label_5.setText(_translate("MainWindow", "TextLabel"))

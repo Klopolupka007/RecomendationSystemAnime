@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="trash">
+    <file>trash.png</file>
+  </qresource>
+</RCC>

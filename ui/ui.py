@@ -4,7 +4,8 @@ from PyQt5.QtCore import QUrl, QSortFilterProxyModel, Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QPixmap, QImage
 from PyQt5.QtMultimedia import QMediaPlaylist, QMediaContent, QMediaPlayer
 import pandas as pd
-from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout, QRadioButton, QMessageBox
+from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout, QRadioButton, QMessageBox, \
+    QSizePolicy
 import requests
 from tqdm import tqdm
 
@@ -205,19 +206,27 @@ class Ui_MainWindow(object):
 
                 widget = QWidget()
                 widget_layout = QVBoxLayout()
+                widget_layout.setAlignment(Qt.AlignHCenter)
                 widget.setLayout(widget_layout)
 
-                image_label = QLabel()
+                self.image_label = QLabel()
                 if image_path == '':
                     image = "F:\PycharmProjects\RecomendationSystem\\ui\\assets\\Not_found_image.jpg"
                 else:
-
                     image = QImage()
                     image.loadFromData(requests.get(image_path).content)
-                image_label.setPixmap(QPixmap(image))
-                widget_layout.addWidget(image_label)
+                img = QPixmap(image)
+                self.image_label.setPixmap(img)
+                self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                self.image_label.setStyleSheet('background-color:gray;')
+                self.image_label.setMaximumWidth(160)
+                self.image_label.setMaximumHeight(226)
+                widget_layout.addWidget(self.image_label)
 
                 label = QLabel(label_text)
+                label.setMaximumWidth(160)
+                label.setMaximumHeight(40)
+                label.setStyleSheet('background-color:gray;')
                 widget_layout.addWidget(label)
 
                 # Добавляем виджет в GridLayout
@@ -438,6 +447,8 @@ class Ui_MainWindow(object):
         self.ScrollAreaAnimeList_layout.setObjectName("ScrollAreaAnimeList_layout")
         self.gridLayout = QtWidgets.QGridLayout(self.ScrollAreaAnimeList_layout)
         self.gridLayout.setObjectName("gridLayout")
+        self.gridLayout.setHorizontalSpacing(0)
+        self.gridLayout.setVerticalSpacing(0)
 
         # Созадем список блоков аниме
         self.ListAnimeBlocks = [('https://desu.shikimori.me/uploads/poster/animes/5114/preview_alt-ba65e789c26d848f95418b3f8718b525.jpeg', 'Стальной алхимик'),

@@ -11,9 +11,44 @@ from customwidgets import OnOffWidget
 
 class Ui_MainWindow(object):
 
+    def Assets(self):
+        self.font_header = QtGui.QFont()
+        self.font_header.setFamily("Cascadia Mono")
+        self.font_header.setPointSize(24)
+        self.font_header.setBold(True)
+        self.font_header.setWeight(75)
+        self.font_header.setKerning(True)
+
+        self.simple_font = QtGui.QFont()
+        self.simple_font.setFamily("Arial")
+        self.simple_font.setPointSize(11)
+
+        self.bold_font = QtGui.QFont()
+        self.bold_font.setFamily("Arial")
+        self.bold_font.setPointSize(11)
+        self.bold_font.setBold(True)
+
     def read_dataset(self):
+        '''
+        Чтение датасета
+        :return:
+        '''
         self.anime = pd.read_csv('../animeList.csv')
         self.rating = pd.read_csv('../Rate.csv')
+
+    # Заголовок приложения
+    def header_main(self):
+        self.MainLabel = QtWidgets.QLabel(self.centralwidget)
+        self.MainLabel.setFont(self.font_header)
+        self.MainLabel.setStyleSheet("color: white;")
+        self.MainLabel.setTextFormat(QtCore.Qt.AutoText)
+        self.MainLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.MainLabel.setObjectName("MainLabel")
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setOffset(-1.0, 1.0)
+        shadow.setColor(QtGui.QColor("#333333"))
+        self.MainLabel.setGraphicsEffect(shadow)
+        self.verticalLayout_7.addWidget(self.MainLabel)
 
     def anime_list(self):
         anime_list = list(pd.unique(self.anime['name']))
@@ -23,7 +58,7 @@ class Ui_MainWindow(object):
             it.setEditable(False)
             it.setCheckable(True)
             anime_check_model.setItem(row, 0, it)
-            anime_check_model.setHorizontalHeaderLabels(['Список пользователей'])
+            anime_check_model.setHorizontalHeaderLabels(['Список аниме'])
 
         filter_proxy_model = QSortFilterProxyModel()
         filter_proxy_model.setSourceModel(anime_check_model)
@@ -73,7 +108,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         # Читаем датасет
         self.read_dataset()
-
+        self.Assets()
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
         MainWindow.resize(897, 547)
@@ -86,25 +121,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout_7.setContentsMargins(10, 20, 10, 15)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.header_main()
 
-        # Заголовок приложения
-        self.MainLabel = QtWidgets.QLabel(self.centralwidget)
-        font = QtGui.QFont()
-        font.setFamily("Cascadia Mono")
-        font.setPointSize(24)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setKerning(True)
-        self.MainLabel.setFont(font)
-        self.MainLabel.setStyleSheet("color: white;")
-        self.MainLabel.setTextFormat(QtCore.Qt.AutoText)
-        self.MainLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.MainLabel.setObjectName("MainLabel")
-        shadow = QtWidgets.QGraphicsDropShadowEffect()
-        shadow.setOffset(-1.0, 1.0)
-        shadow.setColor(QtGui.QColor("#333333"))
-        self.MainLabel.setGraphicsEffect(shadow)
-        self.verticalLayout_7.addWidget(self.MainLabel)
 
         # ----------------- Верхний уровень 0 ------------------
         # Главный Layout (горизонтальный)
@@ -199,10 +217,6 @@ class Ui_MainWindow(object):
         self.formLayout.setObjectName("formLayout")
 
         # <\------------ Уровни 0.1.2.x
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(11)
-        font.setBold(True)
         '''self.anime_name = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
         self.anime_name.setObjectName("anime_name")
         self.anime_name.setText("Название")
@@ -319,18 +333,13 @@ class Ui_MainWindow(object):
         self.Search_Trash_layout = QtWidgets.QHBoxLayout()
         self.Search_Trash_layout.setObjectName("Search_Trash_layout")
         self.SearchButton = QtWidgets.QPushButton(self.centralwidget)
-        font = QtGui.QFont()
-        font.setPointSize(11)
-        self.SearchButton.setFont(font)
+        self.SearchButton.setFont(self.simple_font)
         self.SearchButton.setObjectName("SearchButton")
         self.Search_Trash_layout.addWidget(self.SearchButton)
         self.TrashButton = QtWidgets.QPushButton(self.centralwidget)
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.TrashButton.setFont(font)
+        self.TrashButton.setFont(self.simple_font)
         self.TrashButton.setStyleSheet("background-color: rgb(255, 0, 0);\n"
                                        "")
-        self.TrashButton.setText("")
         self.TrashButton.setIcon(QtGui.QIcon('assets/trash.png'))
         self.TrashButton.setIconSize(QtCore.QSize(20, 20))
         self.TrashButton.setObjectName("TrashButton")
@@ -361,10 +370,7 @@ class Ui_MainWindow(object):
 
         # Сортировка -------- Уровни 0.2.1.1-0.2.1.2
         self.SortingLabel = QtWidgets.QLabel(self.UpperFrame)
-        font = QtGui.QFont()
-        font.setFamily("Arial")
-        font.setPointSize(11)
-        self.SortingLabel.setFont(font)
+        self.SortingLabel.setFont(self.simple_font)
         self.SortingLabel.setStyleSheet("background-color: rgb(255,255,255,0);")
         self.SortingLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.SortingLabel.setObjectName("SortingLabel")

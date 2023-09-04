@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia
 from PyQt5.QtCore import QUrl, QSortFilterProxyModel, Qt
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QPixmap, QImage
 from PyQt5.QtMultimedia import QMediaPlaylist, QMediaContent, QMediaPlayer
 import pandas as pd
-from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit
+from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout
+import requests
 from tqdm import tqdm
 
 from customwidgets import OnOffWidget
@@ -104,6 +105,40 @@ class Ui_MainWindow(object):
         table_users.setModel(filter_proxy_model)
         self.PlainTextUsers.textChanged.connect(filter_proxy_model.setFilterRegExp)
         self.formLayout_2.addWidget(table_users)
+
+    def change_grid(self):
+        '''
+        Обновление области списка аниме
+        :return:
+        '''
+        for i in reversed(range(self.gridLayout.count())):
+            self.gridLayout.itemAt(i).widget().setParent(None)
+        if self.ListAnimeBlocks == []:
+            pass
+        else:
+            for i, image_label in enumerate(self.ListAnimeBlocks):
+                image_path, label_text = image_label
+
+                widget = QWidget()
+                widget_layout = QVBoxLayout()
+                widget.setLayout(widget_layout)
+
+                image_label = QLabel()
+                if image_path == '':
+                    image = "F:\PycharmProjects\RecomendationSystem\\ui\\assets\\Not_found_image.jpg"
+                else:
+
+                    image = QImage()
+                    image.loadFromData(requests.get(image_path).content)
+                image_label.setPixmap(QPixmap(image))
+                widget_layout.addWidget(image_label)
+
+                label = QLabel(label_text)
+                widget_layout.addWidget(label)
+
+                # Добавляем виджет в GridLayout
+                self.gridLayout.addWidget(widget, i // 3, i % 3)
+            #self.gridLayout.addStretch()
 
     def setupUi(self, MainWindow):
         # Читаем датасет
@@ -435,6 +470,13 @@ class Ui_MainWindow(object):
         self.ScrollAreaAnimeList_layout.setObjectName("ScrollAreaAnimeList_layout")
         self.gridLayout = QtWidgets.QGridLayout(self.ScrollAreaAnimeList_layout)
         self.gridLayout.setObjectName("gridLayout")
+
+        # Созадем список блоков аниме
+        self.ListAnimeBlocks = [('https://desu.shikimori.me/uploads/poster/animes/5114/preview_alt-ba65e789c26d848f95418b3f8718b525.jpeg', 'Стальной алхимик'),
+                                ('', 'алхимик'),
+                                ('', 'алхимик'),
+                                ('', 'алхимик')]
+        self.change_grid()
 
         # self.pushButton_5 = QtWidgets.QPushButton(self.ScrollAreaAnimeList_layout)
         # self.pushButton_5.setObjectName("pushButton_5")

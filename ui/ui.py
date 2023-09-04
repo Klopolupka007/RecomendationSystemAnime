@@ -255,8 +255,8 @@ class Ui_MainWindow(object):
         self.read_dataset()
         self.Assets()
         MainWindow.setObjectName("MainWindow")
+        MainWindow.setFixedSize(930, 560)
         MainWindow.setEnabled(True)
-        MainWindow.resize(897, 547)
         MainWindow.setLayoutDirection(QtCore.Qt.LeftToRight)
         MainWindow.setStyleSheet(
             "QWidget#centralwidget {border-image: url(\"assets/doge.jpg\");}")

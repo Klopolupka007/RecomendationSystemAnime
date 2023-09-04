@@ -4,7 +4,7 @@ from PyQt5.QtCore import QUrl, QSortFilterProxyModel, Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QPixmap, QImage
 from PyQt5.QtMultimedia import QMediaPlaylist, QMediaContent, QMediaPlayer
 import pandas as pd
-from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout, QRadioButton, QMessageBox
 import requests
 from tqdm import tqdm
 
@@ -52,59 +52,143 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.addWidget(self.MainLabel)
 
     def anime_list(self):
+        # Скроллящаяся панель со списком аниме ------------- Уровень 0.1.2
+        self.ScrollAreaAnime = QtWidgets.QScrollArea(self.centralwidget)
+        self.ScrollAreaAnime.setStyleSheet("QScrollBar:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "    width: 15px;\n"
+                                           "    margin: 15x 0 0 0;\n"
+                                           "}\n"
+                                           "QScrollBar::handle:vertical {\n"
+                                           "    border-radius: 7px;\n"
+                                           "    background-color: rgb(230, 230, 230, 255);\n"
+                                           "    min-height: 20px;\n"
+                                           "}\n"
+                                           "QScrollBar::sub-line:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    border-top-left-radius: 7px;\n"
+                                           "    border-top-right-radius: 7px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "}\n"
+                                           "QScrollBar::add-line:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    border-bottom-left-radius: 7px;\n"
+                                           "    border-bottom-right-radius: 7px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "}\n"
+                                           "QScrollBar::up-arrow:vertical, QScrollBar::down-arrow-vertical {\n"
+                                           "    background: none;\n"
+                                           "}\n"
+                                           "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
+                                           "    background: none;\n"
+                                           "}")
+        self.ScrollAreaAnime.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.ScrollAreaAnime.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.ScrollAreaAnime.setWidgetResizable(True)
+        self.ScrollAreaAnime.setObjectName("ScrollAreaAnime")
+        self.ScrollAreaAnime_layout = QtWidgets.QWidget()
+        self.ScrollAreaAnime_layout.setGeometry(QtCore.QRect(0, 0, 308, 166))
+        self.ScrollAreaAnime_layout.setObjectName("ScrollAreaAnime_layout")
+        self.formLayout = QtWidgets.QFormLayout(self.ScrollAreaAnime_layout)
+        self.formLayout.setObjectName("formLayout")
+
         anime_list = list(pd.unique(self.anime['name']))
         anime_check_model = QStandardItemModel(len(anime_list), 1)
         for row, i in tqdm(enumerate(anime_list)):
             it = QStandardItem(str(i))
             it.setEditable(False)
+            it.setSelectable(True)
             it.setCheckable(True)
             anime_check_model.setItem(row, 0, it)
             anime_check_model.setHorizontalHeaderLabels(['Список аниме'])
 
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(anime_check_model)
+        self.filter_proxy_modelAnime = QSortFilterProxyModel()
+        self.filter_proxy_modelAnime.setSourceModel(anime_check_model)
         # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
-        table = QTableView()
-        table.setStyleSheet('font-size: 12px;'
+        self.filter_proxy_modelAnime.setFilterKeyColumn(0)
+        self.tableAnime = QTableView()
+        self.tableAnime.setStyleSheet('font-size: 12px;'
                                   'font-family: Arial;'
                                   'border: none;'
                                   'background-color: rgb(255,255,255,0);')
-        table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table.horizontalHeader().setStyleSheet('border: none;')
-        table.verticalHeader().setStyleSheet('border: none;')
-        table.setModel(filter_proxy_model)
-        self.PlainTextAnime.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        self.formLayout.addWidget(table)
+        self.tableAnime.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableAnime.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tableAnime.horizontalHeader().setStyleSheet('border: none;')
+        self.tableAnime.verticalHeader().setStyleSheet('border: none;')
+        self.tableAnime.setModel(self.filter_proxy_modelAnime)
+        self.PlainTextAnime.textChanged.connect(self.filter_proxy_modelAnime.setFilterRegExp)
+        self.formLayout.addWidget(self.tableAnime)
 
     def user_list(self):
-        user_list = list(pd.unique(self.rating['user_id']))
+        # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
+        self.ScrollAreaUsers = QtWidgets.QScrollArea()
+        self.ScrollAreaUsers.setStyleSheet("QScrollBar:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "    width: 15px;\n"
+                                           "    margin: 15x 0 0 0;\n"
+                                           "}\n"
+                                           "QScrollBar::handle:vertical {\n"
+                                           "    border-radius: 7px;\n"
+                                           "    background-color: rgb(230, 230, 230, 255);\n"
+                                           "    min-height: 20px;\n"
+                                           "}\n"
+                                           "QScrollBar::sub-line:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    border-top-left-radius: 7px;\n"
+                                           "    border-top-right-radius: 7px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "}\n"
+                                           "QScrollBar::add-line:vertical {\n"
+                                           "    border: 4px;\n"
+                                           "    border-bottom-left-radius: 7px;\n"
+                                           "    border-bottom-right-radius: 7px;\n"
+                                           "    background-color: rgb(255, 255, 255, 50);\n"
+                                           "}\n"
+                                           "QScrollBar::up-arrow:vertical, QScrollBar::down-arrow-vertical {\n"
+                                           "    background: none;\n"
+                                           "}\n"
+                                           "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
+                                           "    background: none;\n"
+                                           "}\n"
+                                           "")
+        self.ScrollAreaUsers.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.ScrollAreaUsers.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.ScrollAreaUsers.setWidgetResizable(True)
+        self.ScrollAreaUsers.setObjectName("ScrollAreaUsers")
+        self.ScrollAreaUsers_layout = QtWidgets.QWidget()
+        self.ScrollAreaUsers_layout.setGeometry(QtCore.QRect(0, -16, 293, 183))
+        self.ScrollAreaUsers_layout.setObjectName("ScrollAreaUsers_layout")
+        self.formLayout_2 = QtWidgets.QVBoxLayout(self.ScrollAreaUsers_layout)
+        self.formLayout_2.setObjectName("formLayout_2")
+
+        self.user_list = list(pd.unique(self.rating['user_id']))
         # user_list = list(pd.unique(self.rating.user_id))
-        user_check_model = QStandardItemModel(len(user_list), 1)
-        for row, i in tqdm(enumerate(user_list)):
+        self.user_check_model = QStandardItemModel(len(self.user_list), 1)
+
+        for row, i in tqdm(enumerate(self.user_list)):
             it = QStandardItem(str(i))
             it.setEditable(False)
             it.setCheckable(True)
-            user_check_model.setItem(row, 0, it)
-            user_check_model.setHorizontalHeaderLabels(['Список пользователей'])
-
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(user_check_model)
+            self.user_check_model.setItem(row, 0, it)
+            self.user_check_model.setHorizontalHeaderLabels(['Список пользователей'])
+        self.filter_proxy_modelUsers = QSortFilterProxyModel()
+        self.filter_proxy_modelUsers.setSourceModel(self.user_check_model)
         # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
-        table_users = QTableView()
-        table_users.setStyleSheet('font-size: 12px;'
+        self.filter_proxy_modelUsers.setFilterKeyColumn(0)
+        self.table_users = QTableView()
+        self.table_users.setStyleSheet('font-size: 12px;'
                                   'font-family: Arial;'
                                   'border: none;'
                                   'background-color: rgb(255,255,255,0);')
-        table_users.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table_users.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table_users.horizontalHeader().setStyleSheet('border: none;')
-        table_users.verticalHeader().setStyleSheet('border: none;')
-        table_users.setModel(filter_proxy_model)
-        self.PlainTextUsers.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        self.formLayout_2.addWidget(table_users)
+        self.table_users.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_users.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_users.horizontalHeader().setStyleSheet('border: none;')
+        self.table_users.verticalHeader().setStyleSheet('border: none;')
+        self.table_users.setModel(self.filter_proxy_modelUsers)
+        self.PlainTextUsers.textChanged.connect(self.filter_proxy_modelUsers.setFilterRegExp)
+        self.formLayout_2.addWidget(self.table_users)
 
     def change_grid(self):
         '''
@@ -138,7 +222,24 @@ class Ui_MainWindow(object):
 
                 # Добавляем виджет в GridLayout
                 self.gridLayout.addWidget(widget, i // 3, i % 3)
-            #self.gridLayout.addStretch()
+
+    def SearchClick(self):
+        self.userSelected = ''
+        for row in range(len(self.user_list)):
+            it = self.user_check_model.item(row, 0)
+            if Qt.Checked == it.checkState() and self.userSelected == '':
+                self.userSelected = it.text()
+            elif Qt.Checked == it.checkState() and self.userSelected != '':
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setText('Предупреждение')
+                msg.setWindowTitle('Warning')
+                msg.setInformativeText(
+                'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
+                'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
+                'кнопкой сброса выделения.')
+                msg.exec()
+                break
 
     def setupUi(self, MainWindow):
         # Читаем датасет
@@ -210,64 +311,8 @@ class Ui_MainWindow(object):
         self.PlainTextAnime.setObjectName("PlainTextAnime")
         self.LeftPanel.addWidget(self.PlainTextAnime)
 
-        # Скроллящаяся панель со списком аниме ------------- Уровень 0.1.2
-        self.ScrollAreaAnime = QtWidgets.QScrollArea(self.centralwidget)
-        self.ScrollAreaAnime.setStyleSheet("QScrollBar:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "    width: 15px;\n"
-                                           "    margin: 15x 0 0 0;\n"
-                                           "}\n"
-                                           "QScrollBar::handle:vertical {\n"
-                                           "    border-radius: 7px;\n"
-                                           "    background-color: rgb(230, 230, 230, 255);\n"
-                                           "    min-height: 20px;\n"
-                                           "}\n"
-                                           "QScrollBar::sub-line:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    border-top-left-radius: 7px;\n"
-                                           "    border-top-right-radius: 7px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "}\n"
-                                           "QScrollBar::add-line:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    border-bottom-left-radius: 7px;\n"
-                                           "    border-bottom-right-radius: 7px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "}\n"
-                                           "QScrollBar::up-arrow:vertical, QScrollBar::down-arrow-vertical {\n"
-                                           "    background: none;\n"
-                                           "}\n"
-                                           "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
-                                           "    background: none;\n"
-                                           "}")
-        self.ScrollAreaAnime.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.ScrollAreaAnime.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.ScrollAreaAnime.setWidgetResizable(True)
-        self.ScrollAreaAnime.setObjectName("ScrollAreaAnime")
-        self.ScrollAreaAnime_layout = QtWidgets.QWidget()
-        self.ScrollAreaAnime_layout.setGeometry(QtCore.QRect(0, 0, 308, 166))
-        self.ScrollAreaAnime_layout.setObjectName("ScrollAreaAnime_layout")
-        self.formLayout = QtWidgets.QFormLayout(self.ScrollAreaAnime_layout)
-        self.formLayout.setObjectName("formLayout")
-
-        # <\------------ Уровни 0.1.2.x
-        '''self.anime_name = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
-        self.anime_name.setObjectName("anime_name")
-        self.anime_name.setText("Название")
-        self.anime_name.setFont(font)
-        self.anime_name.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.anime_name)
-        self.genres = QtWidgets.QLabel(self.ScrollAreaAnime_layout)
-        self.genres.setObjectName("genres")
-        self.genres.setText("Жанры")
-        self.genres.setFont(font)
-        self.genres.setAlignment(QtCore.Qt.AlignCenter)
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.genres)
-        '''
-        # --------------------/>
+        # Добавляем список аниме
         self.anime_list()
-
         self.ScrollAreaAnime.setWidget(self.ScrollAreaAnime_layout)
         self.LeftPanel.addWidget(self.ScrollAreaAnime)
 
@@ -278,89 +323,11 @@ class Ui_MainWindow(object):
                                           "background-color: rgb(255, 255, 255, 200);")
         self.PlainTextUsers.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.PlainTextUsers.setObjectName("PlainTextUsers")
-
         self.LeftPanel.addWidget(self.PlainTextUsers)
 
-        # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
-        self.ScrollAreaUsers = QtWidgets.QScrollArea()
-        self.ScrollAreaUsers.setStyleSheet("QScrollBar:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "    width: 15px;\n"
-                                           "    margin: 15x 0 0 0;\n"
-                                           "}\n"
-                                           "QScrollBar::handle:vertical {\n"
-                                           "    border-radius: 7px;\n"
-                                           "    background-color: rgb(230, 230, 230, 255);\n"
-                                           "    min-height: 20px;\n"
-                                           "}\n"
-                                           "QScrollBar::sub-line:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    border-top-left-radius: 7px;\n"
-                                           "    border-top-right-radius: 7px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "}\n"
-                                           "QScrollBar::add-line:vertical {\n"
-                                           "    border: 4px;\n"
-                                           "    border-bottom-left-radius: 7px;\n"
-                                           "    border-bottom-right-radius: 7px;\n"
-                                           "    background-color: rgb(255, 255, 255, 50);\n"
-                                           "}\n"
-                                           "QScrollBar::up-arrow:vertical, QScrollBar::down-arrow-vertical {\n"
-                                           "    background: none;\n"
-                                           "}\n"
-                                           "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
-                                           "    background: none;\n"
-                                           "}\n"
-                                           "")
-        self.ScrollAreaUsers.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.ScrollAreaUsers.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.ScrollAreaUsers.setWidgetResizable(True)
-        self.ScrollAreaUsers.setObjectName("ScrollAreaUsers")
-        self.ScrollAreaUsers_layout = QtWidgets.QWidget()
-        self.ScrollAreaUsers_layout.setGeometry(QtCore.QRect(0, -16, 293, 183))
-        self.ScrollAreaUsers_layout.setObjectName("ScrollAreaUsers_layout")
-        self.formLayout_2 = QtWidgets.QVBoxLayout(self.ScrollAreaUsers_layout)
-        self.formLayout_2.setObjectName("formLayout_2")
         # Добавляем список элементов пользователей
+        self.userSelected = ''
         self.user_list()
-
-        # <\------------ Уровни 0.1.4.x
-
-        #self.usersListLabels = [QtWidgets.QRadioButton(self.ScrollAreaUsers_layout).setText(i) for i in pd.unique(self.rating.user_id)]
-        '''self.label_5 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_5.setObjectName("label_5")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_5)
-        self.label_7 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_7.setObjectName("label_7")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.label_7)
-        self.label_9 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_9.setObjectName("label_9")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_9)
-        self.label_11 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_11.setObjectName("label_11")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_11)
-        self.label_12 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_12.setObjectName("label_12")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_12)
-        self.label_13 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_13.setObjectName("label_13")
-        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_13)
-        self.label_14 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_14.setObjectName("label_14")
-        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_14)
-        self.label_15 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_15.setObjectName("label_15")
-        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_15)
-        self.label_16 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_16.setObjectName("label_16")
-        self.formLayout_2.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.label_16)
-        self.label_17 = QtWidgets.QLabel(self.ScrollAreaUsers_layout)
-        self.label_17.setObjectName("label_17")
-        self.formLayout_2.setWidget(8, QtWidgets.QFormLayout.LabelRole, self.label_17)
-        '''
-        # --------------------/>
-
         self.ScrollAreaUsers.setWidget(self.ScrollAreaUsers_layout)
         self.LeftPanel.addWidget(self.ScrollAreaUsers)
 
@@ -370,6 +337,7 @@ class Ui_MainWindow(object):
         self.SearchButton = QtWidgets.QPushButton(self.centralwidget)
         self.SearchButton.setFont(self.simple_font)
         self.SearchButton.setObjectName("SearchButton")
+        self.SearchButton.clicked.connect(self.SearchClick)
         self.Search_Trash_layout.addWidget(self.SearchButton)
         self.TrashButton = QtWidgets.QPushButton(self.centralwidget)
         self.TrashButton.setFont(self.simple_font)
@@ -478,9 +446,7 @@ class Ui_MainWindow(object):
                                 ('', 'алхимик')]
         self.change_grid()
 
-        # self.pushButton_5 = QtWidgets.QPushButton(self.ScrollAreaAnimeList_layout)
-        # self.pushButton_5.setObjectName("pushButton_5")
-        # self.gridLayout.addWidget(self.pushButton_5, 0, 0, 1, 1)
+
         self.ScrollAreaAnimeList.setWidget(self.ScrollAreaAnimeList_layout)
         self.RightPanel.addWidget(self.ScrollAreaAnimeList)
         self.RightPanel.setStretch(0, 1)

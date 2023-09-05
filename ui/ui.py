@@ -9,8 +9,6 @@ from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel,
 import requests
 from tqdm import tqdm
 
-from customwidgets import OnOffWidget
-
 class Ui_MainWindow(object):
 
     def Assets(self):
@@ -35,8 +33,8 @@ class Ui_MainWindow(object):
         Чтение датасета
         :return:
         '''
-        self.anime = pd.read_csv('../animeList.csv')
-        self.rating = pd.read_csv('../Rate.csv')
+        self.anime = pd.read_csv('D:\MAXIM\python_projects\RecomendationSystemAnime\\animeList.csv')
+        self.rating = pd.read_csv('D:\MAXIM\python_projects\RecomendationSystemAnime\Rate.csv')
 
     # Заголовок приложения
     def header_main(self):
@@ -94,18 +92,18 @@ class Ui_MainWindow(object):
         self.formLayout = QtWidgets.QFormLayout(self.ScrollAreaAnime_layout)
         self.formLayout.setObjectName("formLayout")
 
-        anime_list = list(pd.unique(self.anime['name']))
-        anime_check_model = QStandardItemModel(len(anime_list), 1)
-        for row, i in tqdm(enumerate(anime_list)):
+        self.anime_list = list(pd.unique(self.anime['name']))
+        self.anime_check_model = QStandardItemModel(len(self.anime_list), 1)
+        for row, i in tqdm(enumerate(self.anime_list)):
             it = QStandardItem(str(i))
             it.setEditable(False)
             it.setSelectable(True)
             it.setCheckable(True)
-            anime_check_model.setItem(row, 0, it)
-            anime_check_model.setHorizontalHeaderLabels(['Список аниме'])
+            self.anime_check_model.setItem(row, 0, it)
+            self.anime_check_model.setHorizontalHeaderLabels(['Список аниме'])
 
         self.filter_proxy_modelAnime = QSortFilterProxyModel()
-        self.filter_proxy_modelAnime.setSourceModel(anime_check_model)
+        self.filter_proxy_modelAnime.setSourceModel(self.anime_check_model)
         # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self.filter_proxy_modelAnime.setFilterKeyColumn(0)
         self.tableAnime = QTableView()
@@ -120,6 +118,23 @@ class Ui_MainWindow(object):
         self.tableAnime.setModel(self.filter_proxy_modelAnime)
         self.PlainTextAnime.textChanged.connect(self.filter_proxy_modelAnime.setFilterRegExp)
         self.formLayout.addWidget(self.tableAnime)
+
+    def Jaccar(self, anime_1):
+        '''
+        Расстояние Жаккара
+        :return:
+        '''
+        self.popular = []
+        users_with_anime = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
+        count_users = len(users_with_anime)
+
+        # Получите список других аниме, оцененных этими пользователями
+        other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id']
+        Jaccar_result = other_anime.value_counts()
+        # Вычислите коэффициент Жаккара
+        print(Jaccar_result)
+
+
 
     def user_list(self):
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
@@ -211,7 +226,7 @@ class Ui_MainWindow(object):
 
                 self.image_label = QLabel()
                 if image_path == '':
-                    image = "F:\PycharmProjects\RecomendationSystem\\ui\\assets\\Not_found_image.jpg"
+                    image = "assets/Not_found_image.jpg"
                 else:
                     image = QImage()
                     image.loadFromData(requests.get(image_path).content)
@@ -234,6 +249,23 @@ class Ui_MainWindow(object):
 
     def SearchClick(self):
         self.userSelected = ''
+        self.animeSelected = ''
+        for row in range(len(self.anime_list)):
+            it = self.anime_check_model.item(row, 0)
+            if Qt.Checked == it.checkState() and self.animeSelected == '':
+                self.animeSelected = self.anime[self.anime['name'] == it.text()]['anime_id'].unique()[0]
+                self.Jaccar(self.animeSelected)
+            elif Qt.Checked == it.checkState() and self.animeSelected != '':
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setText('Предупреждение')
+                msg.setWindowTitle('Warning')
+                msg.setInformativeText(
+                'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
+                'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
+                'кнопкой сброса выделения.')
+                msg.exec()
+                break
         for row in range(len(self.user_list)):
             it = self.user_check_model.item(row, 0)
             if Qt.Checked == it.checkState() and self.userSelected == '':
@@ -255,7 +287,7 @@ class Ui_MainWindow(object):
         self.read_dataset()
         self.Assets()
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(930, 560)
+        #MainWindow.setFixedSize(930, 560)
         MainWindow.setEnabled(True)
         MainWindow.setLayoutDirection(QtCore.Qt.LeftToRight)
         MainWindow.setStyleSheet(
@@ -321,6 +353,7 @@ class Ui_MainWindow(object):
         self.LeftPanel.addWidget(self.PlainTextAnime)
 
         # Добавляем список аниме
+        self.animeSelected = ''
         self.anime_list()
         self.ScrollAreaAnime.setWidget(self.ScrollAreaAnime_layout)
         self.LeftPanel.addWidget(self.ScrollAreaAnime)

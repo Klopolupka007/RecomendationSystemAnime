@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel,
     QSizePolicy
 import requests
 from tqdm import tqdm
+import numpy as np
+import math
 
 class Ui_MainWindow(object):
 
@@ -33,8 +35,9 @@ class Ui_MainWindow(object):
         Чтение датасета
         :return:
         '''
-        self.anime = pd.read_csv('D:\MAXIM\python_projects\RecomendationSystemAnime\\animeList.csv')
-        self.rating = pd.read_csv('D:\MAXIM\python_projects\RecomendationSystemAnime\Rate.csv')
+        self.anime = pd.read_csv('../animeList.csv')
+        self.rating = pd.read_csv('../Rate.csv')
+        self.data_anime = pd.read_csv('../merged_file.csv')
 
     # Заголовок приложения
     def header_main(self):
@@ -128,13 +131,23 @@ class Ui_MainWindow(object):
         users_with_anime = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
         count_users = len(users_with_anime)
 
-        # Получите список других аниме, оцененных этими пользователями
-        other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id']
-        Jaccar_result = other_anime.value_counts()
-        # Вычислите коэффициент Жаккара
-        print(Jaccar_result)
+        other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id'].values
+        unique_el, counts = np.unique(other_anime, return_counts=True)
+        sorted_indexes = np.argsort(-counts)  # -counts для сортировки по убыванию
+        self.jaccar_unique_elements = unique_el[sorted_indexes][:100]
+        self.jaccar_counts = counts[sorted_indexes][:100]
+        self.jaccar_counts = self.jaccar_counts/len(self.user_list)
+        self.jaccar_counts /= self.jaccar_counts[0]
 
-
+        self.ListAnimeBlocks = []
+        for i in range(len(self.jaccar_counts)):
+            row = self.data_anime.loc[self.data_anime['anime_id'] == self.jaccar_unique_elements[i]]
+            if row['name-ru'].isnull().values.any():
+                str_name = list(row['name'])
+            else:
+                str_name = list(row['name-ru'])
+            self.ListAnimeBlocks.append([list(row['src'])[0], str_name[0]])
+        self.change_grid()
 
     def user_list(self):
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
@@ -225,7 +238,7 @@ class Ui_MainWindow(object):
                 widget.setLayout(widget_layout)
 
                 self.image_label = QLabel()
-                if image_path == '':
+                if not isinstance(image_path, str):
                     image = "assets/Not_found_image.jpg"
                 else:
                     image = QImage()
@@ -484,10 +497,7 @@ class Ui_MainWindow(object):
         self.gridLayout.setVerticalSpacing(0)
 
         # Созадем список блоков аниме
-        self.ListAnimeBlocks = [('https://desu.shikimori.me/uploads/poster/animes/5114/preview_alt-ba65e789c26d848f95418b3f8718b525.jpeg', 'Стальной алхимик'),
-                                ('', 'алхимик'),
-                                ('', 'алхимик'),
-                                ('', 'алхимик')]
+        self.ListAnimeBlocks = []
         self.change_grid()
 
 

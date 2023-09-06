@@ -127,7 +127,6 @@ class Ui_MainWindow(object):
         Расстояние Жаккара
         :return:
         '''
-        self.popular = []
         users_with_anime = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
         count_users = len(users_with_anime)
 
@@ -148,6 +147,11 @@ class Ui_MainWindow(object):
                 str_name = list(row['name-ru'])
             self.ListAnimeBlocks.append([list(row['src'])[0], str_name[0]])
         self.change_grid()
+
+    def Manhattan(self, user_name):
+        users_with_anime = self.rating[self.rating['user_id'] == user_name]['anime_id']
+        print(users_with_anime)
+
 
     def user_list(self):
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
@@ -260,6 +264,16 @@ class Ui_MainWindow(object):
                 # Добавляем виджет в GridLayout
                 self.gridLayout.addWidget(widget, i // 3, i % 3)
 
+    def TrashClick(self):
+        for row in range(len(self.anime_list)):
+            it = self.anime_check_model.item(row, 0)
+            if Qt.Checked == it.checkState():
+                it.setCheckState(QtCore.Qt.Unchecked)
+        for row in range(len(self.user_list)):
+            it = self.user_check_model.item(row, 0)
+            if Qt.Checked == it.checkState():
+                it.setCheckState(QtCore.Qt.Unchecked)
+
     def SearchClick(self):
         self.userSelected = ''
         self.animeSelected = ''
@@ -283,6 +297,7 @@ class Ui_MainWindow(object):
             it = self.user_check_model.item(row, 0)
             if Qt.Checked == it.checkState() and self.userSelected == '':
                 self.userSelected = it.text()
+                self.Manhattan(self.userSelected)
             elif Qt.Checked == it.checkState() and self.userSelected != '':
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Warning)
@@ -401,6 +416,7 @@ class Ui_MainWindow(object):
         self.TrashButton.setIcon(QtGui.QIcon('assets/trash.png'))
         self.TrashButton.setIconSize(QtCore.QSize(20, 20))
         self.TrashButton.setObjectName("TrashButton")
+        self.TrashButton.clicked.connect(self.TrashClick)
         self.Search_Trash_layout.addWidget(self.TrashButton)
         self.Search_Trash_layout.setStretch(0, 4)
         self.Search_Trash_layout.setStretch(1, 1)
@@ -524,18 +540,6 @@ class Ui_MainWindow(object):
         self.MainLabel.setText(_translate("MainWindow", "Рекомендательная система для подбора аниме"))
         self.PlainTextAnime.setPlaceholderText(_translate("MainWindow", "Введите название аниме"))
         self.PlainTextUsers.setPlaceholderText(_translate("MainWindow", "Введите имя пользователя"))
-        '''
-        self.label_5.setText(_translate("MainWindow", "TextLabel"))
-        self.label_7.setText(_translate("MainWindow", "TextLabel"))
-        self.label_9.setText(_translate("MainWindow", "TextLabel"))
-        self.label_11.setText(_translate("MainWindow", "TextLabel"))
-        self.label_12.setText(_translate("MainWindow", "TextLabel"))
-        self.label_13.setText(_translate("MainWindow", "TextLabel"))
-        self.label_14.setText(_translate("MainWindow", "TextLabel"))
-        self.label_15.setText(_translate("MainWindow", "TextLabel"))
-        self.label_16.setText(_translate("MainWindow", "TextLabel"))
-        self.label_17.setText(_translate("MainWindow", "TextLabel"))
-        '''
         self.SearchButton.setText(_translate("MainWindow", "Поиск"))
         self.SortingLabel.setText(_translate("MainWindow", "Сортировать по:"))
         self.ComboBoxSorting.setItemText(0, _translate("MainWindow", "Возрастанию"))

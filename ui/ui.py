@@ -35,9 +35,9 @@ class Ui_MainWindow(object):
         Чтение датасета
         :return:
         '''
-        self.anime = pd.read_csv('../animeList.csv')
-        self.rating = pd.read_csv('../Rate.csv')
-        self.data_anime = pd.read_csv('../merged_file.csv')
+        self.anime = pd.read_csv('../data/anime.csv')
+        self.rating = pd.read_csv('../data/Rate.csv')
+        #self.data_anime = pd.read_csv('../old/merged_file.csv')
 
     # Заголовок приложения
     def header_main(self):
@@ -95,7 +95,7 @@ class Ui_MainWindow(object):
         self.formLayout = QtWidgets.QFormLayout(self.ScrollAreaAnime_layout)
         self.formLayout.setObjectName("formLayout")
 
-        self.anime_list = list(pd.unique(self.anime['name']))
+        self.anime_list = list(pd.unique(self.anime['name-ru']))
         self.anime_check_model = QStandardItemModel(len(self.anime_list), 1)
         for row, i in tqdm(enumerate(self.anime_list)):
             it = QStandardItem(str(i))
@@ -128,19 +128,18 @@ class Ui_MainWindow(object):
         :return:
         '''
         users_with_anime = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
-        count_users = len(users_with_anime)
 
         other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id'].values
         unique_el, counts = np.unique(other_anime, return_counts=True)
-        sorted_indexes = np.argsort(-counts)  # -counts для сортировки по убыванию
-        self.jaccar_unique_elements = unique_el[sorted_indexes][:100]
-        self.jaccar_counts = counts[sorted_indexes][:100]
+        sorted_indexes = np.argsort(counts)[-100:]  # -counts для сортировки по убыванию
+        self.jaccar_unique_elements = unique_el[sorted_indexes]
+        self.jaccar_counts = counts[sorted_indexes]
         self.jaccar_counts = self.jaccar_counts/len(self.user_list)
-        self.jaccar_counts /= self.jaccar_counts[0]
+        self.jaccar_counts /= self.jaccar_counts[-1]
 
         self.ListAnimeBlocks = []
         for i in range(len(self.jaccar_counts)):
-            row = self.data_anime.loc[self.data_anime['anime_id'] == self.jaccar_unique_elements[i]]
+            row = self.anime.loc[self.anime['anime_id'] == self.jaccar_unique_elements[i]]
             if row['name-ru'].isnull().values.any():
                 str_name = list(row['name'])
             else:
@@ -280,7 +279,7 @@ class Ui_MainWindow(object):
         for row in range(len(self.anime_list)):
             it = self.anime_check_model.item(row, 0)
             if Qt.Checked == it.checkState() and self.animeSelected == '':
-                self.animeSelected = self.anime[self.anime['name'] == it.text()]['anime_id'].unique()[0]
+                self.animeSelected = self.anime[self.anime['name-ru'] == it.text()]['anime_id'].unique()[0]
                 self.Jaccar(self.animeSelected)
             elif Qt.Checked == it.checkState() and self.animeSelected != '':
                 msg = QMessageBox()
@@ -456,12 +455,12 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.ComboBoxSorting)
 
         # Тестовые кнопки -------- Уровни 0.2.1.3-0.2.1.4
-        self.test1 = QtWidgets.QPushButton(self.UpperFrame)
-        self.test1.setObjectName("test1")
-        self.horizontalLayout_2.addWidget(self.test1)
-        self.test2 = QtWidgets.QPushButton(self.UpperFrame)
-        self.test2.setObjectName("test2")
-        self.horizontalLayout_2.addWidget(self.test2)
+        self.method = QtWidgets.QComboBox(self.UpperFrame)
+        self.method.setObjectName("method")
+        self.horizontalLayout_2.addWidget(self.method)
+        self.type = QtWidgets.QComboBox(self.UpperFrame)
+        self.type.setObjectName("type")
+        self.horizontalLayout_2.addWidget(self.type)
 
         self.RightPanel.addWidget(self.UpperFrame)
 
@@ -544,9 +543,13 @@ class Ui_MainWindow(object):
         self.SortingLabel.setText(_translate("MainWindow", "Сортировать по:"))
         self.ComboBoxSorting.setItemText(0, _translate("MainWindow", "Возрастанию"))
         self.ComboBoxSorting.setItemText(1, _translate("MainWindow", "Убыванию"))
-        self.test1.setText(_translate("MainWindow", "PushButton"))
-        self.test2.setText(_translate("MainWindow", "PushButton"))
-        # self.pushButton_5.setText(_translate("MainWindow", "PushButton"))
+        self.method.setItemText(0, _translate("MainWindow", "Метод Жаккара"))
+        self.method.setItemText(1, _translate("MainWindow", "Расстояние Манхеттена"))
+        self.method.setItemText(2, _translate("MainWindow", "Евклидово расстояние"))
+        self.method.setItemText(3, _translate("MainWindow", "Коэфициент Отиаи"))
+        self.method.setItemText(3, _translate("MainWindow", "Коэфициент корелляции Пирсона"))
+        self.type.setItemText(0, _translate("MainWindow", "User-based"))
+        self.type.setItemText(1, _translate("MainWindow", "Item-based"))
 
 
 if __name__ == "__main__":

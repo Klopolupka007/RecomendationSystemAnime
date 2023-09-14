@@ -107,10 +107,10 @@ class Ui_MainWindow(object):
 
         self.filter_proxy_modelAnime = QSortFilterProxyModel()
         self.filter_proxy_modelAnime.setSourceModel(self.anime_check_model)
-        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.filter_proxy_modelAnime.setFilterKeyColumn(0)
+        self.filter_proxy_modelAnime.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        #self.filter_proxy_modelAnime.setFilterKeyColumn(0)
         self.tableAnime = QTableView()
-        self.tableAnime.setStyleSheet('font-size: 12px;'
+        self.tableAnime.setStyleSheet('font-size: 12sp;'
                                   'font-family: Arial;'
                                   'border: none;'
                                   'background-color: rgb(255,255,255,0);')
@@ -207,10 +207,10 @@ class Ui_MainWindow(object):
             self.user_check_model.setHorizontalHeaderLabels(['Список пользователей'])
         self.filter_proxy_modelUsers = QSortFilterProxyModel()
         self.filter_proxy_modelUsers.setSourceModel(self.user_check_model)
-        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.filter_proxy_modelUsers.setFilterKeyColumn(0)
+        self.filter_proxy_modelUsers.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        #self.filter_proxy_modelUsers.setFilterKeyColumn(0)
         self.table_users = QTableView()
-        self.table_users.setStyleSheet('font-size: 12px;'
+        self.table_users.setStyleSheet('font-size: 12sp;'
                                   'font-family: Arial;'
                                   'border: none;'
                                   'background-color: rgb(255,255,255,0);')
@@ -244,8 +244,7 @@ class Ui_MainWindow(object):
                 if not isinstance(image_path, str):
                     image = "assets/Not_found_image.jpg"
                 else:
-                    image = QImage()
-                    image.loadFromData(requests.get(image_path).content)
+                    image = '../parse/images/'+image_path.split('/')[-1]
                 img = QPixmap(image)
                 self.image_label.setPixmap(img)
                 self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -254,14 +253,14 @@ class Ui_MainWindow(object):
                 self.image_label.setMaximumHeight(226)
                 widget_layout.addWidget(self.image_label)
 
-                label = QLabel(label_text)
+                label = QLabel(label_text.replace('~', ','))
                 label.setMaximumWidth(160)
-                label.setMaximumHeight(40)
-                label.setStyleSheet('background-color:gray;')
+                label.setWordWrap(True)
+                #label.setStyleSheet('background-color:gray;')
                 widget_layout.addWidget(label)
 
                 # Добавляем виджет в GridLayout
-                self.gridLayout.addWidget(widget, i // 3, i % 3)
+                self.gridLayout.addWidget(widget, i // 4, i % 4)
 
     def TrashClick(self):
         for row in range(len(self.anime_list)):
@@ -371,8 +370,8 @@ class Ui_MainWindow(object):
         self.PlainTextAnime.setPalette(palette)
         self.PlainTextAnime.setCursor(QtGui.QCursor(QtCore.Qt.IBeamCursor))
         self.PlainTextAnime.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.PlainTextAnime.setStyleSheet("font: 12pt \"Arial\";\n"
-                                          " border-radius:5px;\n"
+        self.PlainTextAnime.setStyleSheet("font: 11pt \"Arial\";\n"
+                                          "border-radius:5px;\n"
                                           "background-color: rgb(255, 255, 255, 200);")
         self.PlainTextAnime.setText("")
         self.PlainTextAnime.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
@@ -387,7 +386,7 @@ class Ui_MainWindow(object):
 
         # Поисковая строка с пользователями ------------ Уровень 0.1.3
         self.PlainTextUsers = QLineEdit(self.centralwidget)
-        self.PlainTextUsers.setStyleSheet("font: 12pt \"Arial\";\n"
+        self.PlainTextUsers.setStyleSheet("font: 11pt \"Arial\";\n"
                                           "border-radius:5px;\n"
                                           "background-color: rgb(255, 255, 255, 200);")
         self.PlainTextUsers.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
@@ -466,46 +465,17 @@ class Ui_MainWindow(object):
 
         # Скроллящаяся панель рекомендуемого аниме -------- Уровень 0.2.2
         self.ScrollAreaAnimeList = QtWidgets.QScrollArea(self.centralwidget)
-        self.ScrollAreaAnimeList.setAutoFillBackground(False)
-        self.ScrollAreaAnimeList.setStyleSheet("QScrollBar:vertical {\n"
-                                               "    border: 4px;\n"
-                                               "    background-color: rgb(255, 255, 255, 50);\n"
-                                               "    width: 15px;\n"
-                                               "    margin: 15x 0 0 0;\n"
-                                               "}\n"
-                                               "QScrollBar::handle:vertical {\n"
-                                               "    border-radius: 7px;\n"
-                                               "    background-color: rgb(230, 230, 230, 255);\n"
-                                               "    min-height: 20px;\n"
-                                               "}\n"
-                                               "QScrollBar::sub-line:vertical {\n"
-                                               "    border: 4px;\n"
-                                               "    border-top-left-radius: 7px;\n"
-                                               "    border-top-right-radius: 7px;\n"
-                                               "    background-color: rgb(255, 255, 255, 50);\n"
-                                               "}\n"
-                                               "QScrollBar::add-line:vertical {\n"
-                                               "    border: 4px;\n"
-                                               "    border-bottom-left-radius: 7px;\n"
-                                               "    border-bottom-right-radius: 7px;\n"
-                                               "    background-color: rgb(255, 255, 255, 50);\n"
-                                               "}\n"
-                                               "QScrollBar::up-arrow:vertical, QScrollBar::down-arrow-vertical {\n"
-                                               "    background: none;\n"
-                                               "}\n"
-                                               "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {\n"
-                                               "    background: none;\n"
-                                               "}\n"
-                                               "")
-        self.ScrollAreaAnimeList.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.ScrollAreaAnimeList.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.ScrollAreaAnimeList.setObjectName('animeScroll')
+        self.ScrollAreaAnimeList.setStyleSheet("QScrollArea#animeScroll { background-color:transparent; background-image: transparent; border: none;}")
         self.ScrollAreaAnimeList.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.ScrollAreaAnimeList.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.ScrollAreaAnimeList.setWidgetResizable(True)
         self.ScrollAreaAnimeList.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.ScrollAreaAnimeList.setObjectName("ScrollAreaAnimeList")
         self.ScrollAreaAnimeList_layout = QtWidgets.QWidget()
-        self.ScrollAreaAnimeList_layout.setGeometry(QtCore.QRect(0, 0, 541, 389))
         self.ScrollAreaAnimeList_layout.setObjectName("ScrollAreaAnimeList_layout")
+        self.ScrollAreaAnimeList_layout.setStyleSheet("QWidget#message_container {background-color:transparent;}")
+        self.ScrollAreaAnimeList_layout.setGeometry(QtCore.QRect(0, 0, 541, 389))
         self.gridLayout = QtWidgets.QGridLayout(self.ScrollAreaAnimeList_layout)
         self.gridLayout.setObjectName("gridLayout")
         self.gridLayout.setHorizontalSpacing(0)
@@ -543,13 +513,8 @@ class Ui_MainWindow(object):
         self.SortingLabel.setText(_translate("MainWindow", "Сортировать по:"))
         self.ComboBoxSorting.setItemText(0, _translate("MainWindow", "Возрастанию"))
         self.ComboBoxSorting.setItemText(1, _translate("MainWindow", "Убыванию"))
-        self.method.setItemText(0, _translate("MainWindow", "Метод Жаккара"))
-        self.method.setItemText(1, _translate("MainWindow", "Расстояние Манхеттена"))
-        self.method.setItemText(2, _translate("MainWindow", "Евклидово расстояние"))
-        self.method.setItemText(3, _translate("MainWindow", "Коэфициент Отиаи"))
-        self.method.setItemText(3, _translate("MainWindow", "Коэфициент корелляции Пирсона"))
-        self.type.setItemText(0, _translate("MainWindow", "User-based"))
-        self.type.setItemText(1, _translate("MainWindow", "Item-based"))
+        self.method.addItems(['Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи", "Коэфициент корелляции Пирсона"])
+        self.type.addItems(["User-based", "Item-based"])
 
 
 if __name__ == "__main__":

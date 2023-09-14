@@ -6,9 +6,12 @@ headers = {
 }
 
 File =  csv.reader(open('../data/anime.csv', newline='', encoding='utf-8'))
+k = 0
 for i in File:
-    if not i[8] == 'src' and  not i[8] == '':
-        resource = requests.get(i[8], headers=headers)
-        res = open(i[8].split('/')[-1], 'wb')
-        res.write(resource.content)
-        res.close()
+    if not i[8] == 'src' and not i[8] == '':
+        k += 1
+        if k > 8309:
+            resource = requests.get(i[8], headers=headers)
+            res = open(i[8].split('/')[-1], 'wb')
+            res.write(resource.content)
+            res.close()

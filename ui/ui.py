@@ -6,12 +6,14 @@ from PyQt5.QtMultimedia import QMediaPlaylist, QMediaContent, QMediaPlayer
 import pandas as pd
 from PyQt5.QtWidgets import QTableView, QHeaderView, QLineEdit, QWidget, QLabel, QVBoxLayout, QRadioButton, QMessageBox, \
     QSizePolicy
-import requests
 from tqdm import tqdm
 import numpy as np
-import math
+from collections import Counter
+import json
+
 
 class Ui_MainWindow(object):
+
 
     def Assets(self):
         self.font_header = QtGui.QFont()
@@ -122,7 +124,7 @@ class Ui_MainWindow(object):
         self.PlainTextAnime.textChanged.connect(self.filter_proxy_modelAnime.setFilterRegExp)
         self.formLayout.addWidget(self.tableAnime)
 
-    def Jaccar(self, anime_1):
+    def Jaccar_item(self, anime_1):
         '''
         Расстояние Жаккара
         :return:
@@ -146,6 +148,59 @@ class Ui_MainWindow(object):
                 str_name = list(row['name-ru'])
             self.ListAnimeBlocks.append([list(row['src'])[0], str_name[0]])
         self.change_grid()
+
+    def Jaccar_user(self, user_1):
+        '''
+        Расстояние Жаккара
+        :return:
+        '''
+
+        def compute_jaccard_similarity_set(set1, set2):
+            intersection = set(set1) & set(set2)
+            union = set(set1) | set(set2)
+            similarity = len(intersection) / len(union)
+            return similarity
+
+        similarities = {}
+        for number, values in tqdm(self.userlist_anime.items()):
+            if number != str(user_1):
+                similarity = compute_jaccard_similarity_set(values, self.userlist_anime[str(user_1)])
+                similarities[number] = similarity
+        count = Counter([item for sublist in [self.userlist_anime[key] for key in sorted(similarities, key=similarities.get, reverse=True)[:100]] for item in sublist])
+        self.ListAnimeBlocks = count.most_common()[:100]
+        self.change_grid()
+
+        '''
+        selected_user_anime = set(self.rating[self.rating["user_id"] == user_1]["anime_id"])
+        dict = {}
+        for user in tqdm(self.rating["user_id"].unique()):
+            if user != user_1:
+                user_anime = self.rating[self.rating["user_id"] == user]["anime_id"]
+                common_anime = selected_user_anime.intersection(user_anime)
+                union_anime = selected_user_anime.union(user_anime)
+                dict[user] = len(common_anime) / len(union_anime)
+        similar_users = sorted(dict, key=dict.get, reverse=True)
+        print(similar_users)
+        sample_users = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
+
+        other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id'].values
+        unique_el, counts = np.unique(other_anime, return_counts=True)
+        sorted_indexes = np.argsort(counts)[-100:]  # -counts для сортировки по убыванию
+        self.jaccar_unique_elements = unique_el[sorted_indexes]
+        self.jaccar_counts = counts[sorted_indexes]
+        self.jaccar_counts = self.jaccar_counts/len(self.user_list)
+        self.jaccar_counts /= self.jaccar_counts[-1]
+
+        self.ListAnimeBlocks = []
+        for i in range(len(self.jaccar_counts)):
+            row = self.anime.loc[self.anime['anime_id'] == self.jaccar_unique_elements[i]]
+            if row['name-ru'].isnull().values.any():
+                str_name = list(row['name'])
+            else:
+                str_name = list(row['name-ru'])
+            self.ListAnimeBlocks.append([list(row['src'])[0], str_name[0]])
+        self.change_grid()
+        '''
 
     def Manhattan(self, user_name):
         users_with_anime = self.rating[self.rating['user_id'] == user_name]['anime_id']
@@ -232,35 +287,43 @@ class Ui_MainWindow(object):
         if self.ListAnimeBlocks == []:
             pass
         else:
+            if type(self.ListAnimeBlocks[0]) == tuple:
+                temp = []
+                for i in self.ListAnimeBlocks:
+                    temp.append([self.anime[self.anime['anime_id'] == int(i[0])]['src'].values[0], self.anime[self.anime['anime_id'] == int(i[0])]['name-ru'].values[0]])
+                self.ListAnimeBlocks = temp.copy()
+            k = 0
             for i, image_label in enumerate(self.ListAnimeBlocks):
                 image_path, label_text = image_label
+                if type(image_path) == str:
+                    widget = QWidget()
+                    widget_layout = QVBoxLayout()
+                    widget_layout.setAlignment(Qt.AlignHCenter)
+                    widget.setLayout(widget_layout)
 
-                widget = QWidget()
-                widget_layout = QVBoxLayout()
-                widget_layout.setAlignment(Qt.AlignHCenter)
-                widget.setLayout(widget_layout)
+                    self.image_label = QLabel()
+                    if not isinstance(image_path, str):
+                        image = "assets/Not_found_image.jpg"
+                    else:
+                        image = '../parse/images/'+image_path.split('/')[-1]
+                    img = QPixmap(image)
+                    self.image_label.setPixmap(img)
+                    self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                    self.image_label.setStyleSheet('background-color:gray;')
+                    self.image_label.setMaximumWidth(160)
+                    self.image_label.setMaximumHeight(226)
+                    widget_layout.addWidget(self.image_label)
 
-                self.image_label = QLabel()
-                if not isinstance(image_path, str):
-                    image = "assets/Not_found_image.jpg"
+                    label = QLabel(label_text.replace('~', ','))
+                    label.setMaximumWidth(160)
+                    label.setWordWrap(True)
+                    #label.setStyleSheet('background-color:gray;')
+                    widget_layout.addWidget(label)
+
+                    # Добавляем виджет в GridLayout
+                    self.gridLayout.addWidget(widget, (i-k) // 4, (i-k) % 4)
                 else:
-                    image = '../parse/images/'+image_path.split('/')[-1]
-                img = QPixmap(image)
-                self.image_label.setPixmap(img)
-                self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-                self.image_label.setStyleSheet('background-color:gray;')
-                self.image_label.setMaximumWidth(160)
-                self.image_label.setMaximumHeight(226)
-                widget_layout.addWidget(self.image_label)
-
-                label = QLabel(label_text.replace('~', ','))
-                label.setMaximumWidth(160)
-                label.setWordWrap(True)
-                #label.setStyleSheet('background-color:gray;')
-                widget_layout.addWidget(label)
-
-                # Добавляем виджет в GridLayout
-                self.gridLayout.addWidget(widget, i // 4, i % 4)
+                    k += 1
 
     def TrashClick(self):
         for row in range(len(self.anime_list)):
@@ -275,40 +338,47 @@ class Ui_MainWindow(object):
     def SearchClick(self):
         self.userSelected = ''
         self.animeSelected = ''
-        for row in range(len(self.anime_list)):
-            it = self.anime_check_model.item(row, 0)
-            if Qt.Checked == it.checkState() and self.animeSelected == '':
-                self.animeSelected = self.anime[self.anime['name-ru'] == it.text()]['anime_id'].unique()[0]
-                self.Jaccar(self.animeSelected)
-            elif Qt.Checked == it.checkState() and self.animeSelected != '':
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setText('Предупреждение')
-                msg.setWindowTitle('Warning')
-                msg.setInformativeText(
-                'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
-                'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
-                'кнопкой сброса выделения.')
-                msg.exec()
-                break
-        for row in range(len(self.user_list)):
-            it = self.user_check_model.item(row, 0)
-            if Qt.Checked == it.checkState() and self.userSelected == '':
-                self.userSelected = it.text()
-                self.Manhattan(self.userSelected)
-            elif Qt.Checked == it.checkState() and self.userSelected != '':
-                msg = QMessageBox()
-                msg.setIcon(QMessageBox.Warning)
-                msg.setText('Предупреждение')
-                msg.setWindowTitle('Warning')
-                msg.setInformativeText(
-                'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
-                'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
-                'кнопкой сброса выделения.')
-                msg.exec()
-                break
+        if self.type.currentText() == 'Item-based':
+            for row in range(len(self.anime_list)):
+                it = self.anime_check_model.item(row, 0)
+                if Qt.Checked == it.checkState() and self.animeSelected == '':
+                    self.animeSelected = self.anime[self.anime['name-ru'] == it.text()]['anime_id'].unique()[0]
+                    self.Jaccar_item(self.animeSelected)
+                elif Qt.Checked == it.checkState() and self.animeSelected != '':
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText('Предупреждение')
+                    msg.setWindowTitle('Warning')
+                    msg.setInformativeText(
+                    'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
+                    'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
+                    'кнопкой сброса выделения.')
+                    msg.exec()
+                    break
+        elif self.type.currentText() == 'User-based':
+            for row in range(len(self.user_list)):
+                it = self.user_check_model.item(row, 0)
+                if Qt.Checked == it.checkState() and self.userSelected == '':
+                    self.userSelected = it.text()
+                    self.Jaccar_user(int(self.userSelected))
+                    #self.Manhattan(self.userSelected)
+                elif Qt.Checked == it.checkState() and self.userSelected != '':
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText('Предупреждение')
+                    msg.setWindowTitle('Warning')
+                    msg.setInformativeText(
+                    'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
+                    'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
+                    'кнопкой сброса выделения.')
+                    msg.exec()
+                    break
 
     def setupUi(self, MainWindow):
+
+        with open('grouping_anime_by_users.json', 'r') as jsonFile:
+            self.userlist_anime = json.load(jsonFile)
+
         # Читаем датасет
         self.read_dataset()
         self.Assets()
@@ -440,19 +510,6 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.UpperFrame)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
 
-        # Сортировка -------- Уровни 0.2.1.1-0.2.1.2
-        self.SortingLabel = QtWidgets.QLabel(self.UpperFrame)
-        self.SortingLabel.setFont(self.simple_font)
-        self.SortingLabel.setStyleSheet("background-color: rgb(255,255,255,0);")
-        self.SortingLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.SortingLabel.setObjectName("SortingLabel")
-        self.horizontalLayout_2.addWidget(self.SortingLabel)
-        self.ComboBoxSorting = QtWidgets.QComboBox(self.UpperFrame)
-        self.ComboBoxSorting.setObjectName("ComboBoxSorting")
-        self.ComboBoxSorting.addItem("")
-        self.ComboBoxSorting.addItem("")
-        self.horizontalLayout_2.addWidget(self.ComboBoxSorting)
-
         # Тестовые кнопки -------- Уровни 0.2.1.3-0.2.1.4
         self.method = QtWidgets.QComboBox(self.UpperFrame)
         self.method.setObjectName("method")
@@ -510,9 +567,6 @@ class Ui_MainWindow(object):
         self.PlainTextAnime.setPlaceholderText(_translate("MainWindow", "Введите название аниме"))
         self.PlainTextUsers.setPlaceholderText(_translate("MainWindow", "Введите имя пользователя"))
         self.SearchButton.setText(_translate("MainWindow", "Поиск"))
-        self.SortingLabel.setText(_translate("MainWindow", "Сортировать по:"))
-        self.ComboBoxSorting.setItemText(0, _translate("MainWindow", "Возрастанию"))
-        self.ComboBoxSorting.setItemText(1, _translate("MainWindow", "Убыванию"))
         self.method.addItems(['Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи", "Коэфициент корелляции Пирсона"])
         self.type.addItems(["User-based", "Item-based"])
 

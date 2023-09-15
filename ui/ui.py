@@ -277,6 +277,13 @@ class Ui_MainWindow(object):
         self.PlainTextUsers.textChanged.connect(self.filter_proxy_modelUsers.setFilterRegExp)
         self.formLayout_2.addWidget(self.table_users)
 
+    def anime_by_user(self, user_id):
+        animeByUser = self.rating[self.rating['user_id'] == user_id]['anime_id']
+        self.ListAnimeBlocks = []
+        for i in animeByUser:
+            self.ListAnimeBlocks.append([self.anime[self.anime['anime_id'] == i]['src'].values[0], self.anime[self.anime['anime_id'] == i]['name-ru'].values[0]])
+        self.change_grid()
+
     def change_grid(self):
         '''
         Обновление области списка аниме
@@ -317,11 +324,12 @@ class Ui_MainWindow(object):
                     label = QLabel(label_text.replace('~', ','))
                     label.setMaximumWidth(160)
                     label.setWordWrap(True)
+                    widget_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
                     #label.setStyleSheet('background-color:gray;')
                     widget_layout.addWidget(label)
 
                     # Добавляем виджет в GridLayout
-                    self.gridLayout.addWidget(widget, (i-k) // 4, (i-k) % 4)
+                    self.gridLayout.addWidget(widget, (i-k) // 9, (i-k) % 9)
                 else:
                     k += 1
 
@@ -373,10 +381,28 @@ class Ui_MainWindow(object):
                     'кнопкой сброса выделения.')
                     msg.exec()
                     break
+        else:
+            for row in range(len(self.user_list)):
+                it = self.user_check_model.item(row, 0)
+                if Qt.Checked == it.checkState() and self.userSelected == '':
+                    self.userSelected = it.text()
+                    self.anime_by_user(int(self.userSelected))
+                elif Qt.Checked == it.checkState() and self.userSelected != '':
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Warning)
+                    msg.setText('Предупреждение')
+                    msg.setWindowTitle('Warning')
+                    msg.setInformativeText(
+                    'Внимание! Выделенно 2 и более объектов в списке, в качестве активного будет использован элемент выше '
+                    'по списку. Для отмены выделения уберите галочку из соответствующих объектов или воспользуйтесь '
+                    'кнопкой сброса выделения.')
+                    msg.exec()
+                    break
+
 
     def setupUi(self, MainWindow):
 
-        with open('grouping_anime_by_users.json', 'r') as jsonFile:
+        with open('../data/grouping_anime_by_users.json', 'r') as jsonFile:
             self.userlist_anime = json.load(jsonFile)
 
         # Читаем датасет
@@ -568,7 +594,7 @@ class Ui_MainWindow(object):
         self.PlainTextUsers.setPlaceholderText(_translate("MainWindow", "Введите имя пользователя"))
         self.SearchButton.setText(_translate("MainWindow", "Поиск"))
         self.method.addItems(['Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи", "Коэфициент корелляции Пирсона"])
-        self.type.addItems(["User-based", "Item-based"])
+        self.type.addItems(["User-based", "Item-based", 'Список аниме пользователя'])
 
 
 if __name__ == "__main__":

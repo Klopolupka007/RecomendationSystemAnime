@@ -88,7 +88,7 @@ class Ui_MainWindow(object):
                                            "    background: none;\n"
                                            "}")
         self.ScrollAreaAnime.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.ScrollAreaAnime.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        #self.ScrollAreaAnime.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.ScrollAreaAnime.setWidgetResizable(True)
         self.ScrollAreaAnime.setObjectName("ScrollAreaAnime")
         self.ScrollAreaAnime_layout = QtWidgets.QWidget()
@@ -177,20 +177,76 @@ class Ui_MainWindow(object):
             temp = 0
             if number != str(user_1):
                 users = set(values) & set(user_list_1)
-                for i in users:
-                    user_1_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(user_1))]['rating'])
-                    if user_1_rate[0] == -1:
-                        user_1_rate[0] = self.avg[str(user_1)]
-                    user_2_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(number))]['rating'])
-                    if user_2_rate[0] == -1:
-                        user_2_rate[0] = self.avg[str(number)]
-                    temp += user_1_rate[0] - user_2_rate[0]
-                if not len(users) == 0:
-                    result.append((number, temp/(len(users))))
-        print(result)
+                if len(users) / len(user_list_1) > 0.76:
+                    for i in users:
+                        user_1_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(user_1))]['rating'])
+                        if user_1_rate[0] == -1:
+                            user_1_rate[0] = self.avg[str(i)]
+                        user_2_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(number))]['rating'])
+                        if user_2_rate[0] == -1:
+                            user_2_rate[0] = self.avg[str(i)]
+                        temp += user_1_rate[0] - user_2_rate[0]
+                    if not len(users) == 0:
+                        result.append((number, abs(temp/(len(users)))))
+        if len(result) == 0:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText('Предупреждение')
+            msg.setWindowTitle('Warning')
+            msg.setInformativeText(
+                'Внимание! Не было найдено ни одного пользователя, прошедших порог похожести с вашим профилем!')
+            msg.exec()
+            return
+        min = 1e308
+        min_tuple = None
+        for i in result:
+            if min > i[1]:
+                min = i[1]
+                min_tuple = i
+        min = self.userlist_anime[min_tuple[0]]
+        self.ListAnimeBlocks = []
+        for i in min:
+            self.ListAnimeBlocks.append([list(self.anime[self.anime['anime_id'] == int(i)]['src'])[0], list(self.anime[self.anime['anime_id'] == int(i)]['name-ru'])[0]])
+        self.change_grid()
 
-
-
+    def Euclid(self, user_1):
+        user_list_1 = self.userlist_anime[str(user_1)]
+        result = []
+        for number, values in tqdm(self.userlist_anime.items()):
+            temp = 0
+            if number != str(user_1):
+                users = set(values) & set(user_list_1)
+                if len(users) / len(user_list_1) > 0.76:
+                    for i in users:
+                        user_1_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(user_1))]['rating'])
+                        if user_1_rate[0] == -1:
+                            user_1_rate[0] = self.avg[str(i)]
+                        user_2_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(number))]['rating'])
+                        if user_2_rate[0] == -1:
+                            user_2_rate[0] = self.avg[str(i)]
+                        temp += (user_1_rate[0] - user_2_rate[0])**2
+                    if not len(users) == 0:
+                        result.append((number, (temp/(len(users))**(1/2))))
+        if len(result) == 0:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText('Предупреждение')
+            msg.setWindowTitle('Warning')
+            msg.setInformativeText(
+                'Внимание! Не было найдено ни одного пользователя, прошедших порог похожести с вашим профилем!')
+            msg.exec()
+            return
+        min = 1e308
+        min_tuple = None
+        for i in result:
+            if min > i[1]:
+                min = i[1]
+                min_tuple = i
+        min = self.userlist_anime[min_tuple[0]]
+        self.ListAnimeBlocks = []
+        for i in min:
+            self.ListAnimeBlocks.append([list(self.anime[self.anime['anime_id'] == int(i)]['src'])[0], list(self.anime[self.anime['anime_id'] == int(i)]['name-ru'])[0]])
+        self.change_grid()
 
     def user_list(self):
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
@@ -314,7 +370,7 @@ class Ui_MainWindow(object):
                     widget_layout.addWidget(label)
 
                     # Добавляем виджет в GridLayout
-                    self.gridLayout.addWidget(widget, (i-k) // 9, (i-k) % 9)
+                    self.gridLayout.addWidget(widget, (i-k) // 6, (i-k) % 6)
                 else:
                     k += 1
 
@@ -358,7 +414,8 @@ class Ui_MainWindow(object):
                         self.Jaccar_user(int(self.userSelected))
                     elif self.method.currentText() == 'Расстояние Манхеттена':
                         self.Manhattan(int(self.userSelected))
-                    #self.Manhattan(self.userSelected)
+                    elif self.method.currentText() == 'Евклидово расстояние':
+                        self.Euclid(int(self.userSelected))
                 elif Qt.Checked == it.checkState() and self.userSelected != '':
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Warning)
@@ -606,5 +663,5 @@ if __name__ == "__main__":
     player.setPlaylist(playlist)
     player.play()
 
-    MainWindow.show()
+    MainWindow.showMaximized()
     sys.exit(app.exec_())

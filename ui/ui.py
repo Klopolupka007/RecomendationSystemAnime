@@ -170,41 +170,26 @@ class Ui_MainWindow(object):
         self.ListAnimeBlocks = count.most_common()[:100]
         self.change_grid()
 
-        '''
-        selected_user_anime = set(self.rating[self.rating["user_id"] == user_1]["anime_id"])
-        dict = {}
-        for user in tqdm(self.rating["user_id"].unique()):
-            if user != user_1:
-                user_anime = self.rating[self.rating["user_id"] == user]["anime_id"]
-                common_anime = selected_user_anime.intersection(user_anime)
-                union_anime = selected_user_anime.union(user_anime)
-                dict[user] = len(common_anime) / len(union_anime)
-        similar_users = sorted(dict, key=dict.get, reverse=True)
-        print(similar_users)
-        sample_users = self.rating[self.rating['anime_id'] == anime_1]['user_id'].unique()
+    def Manhattan(self, user_1):
+        user_list_1 = self.userlist_anime[str(user_1)]
+        result = []
+        for number, values in tqdm(self.userlist_anime.items()):
+            temp = 0
+            if number != str(user_1):
+                users = set(values) & set(user_list_1)
+                for i in users:
+                    user_1_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(user_1))]['rating'])
+                    if user_1_rate[0] == -1:
+                        user_1_rate[0] = self.avg[str(user_1)]
+                    user_2_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(number))]['rating'])
+                    if user_2_rate[0] == -1:
+                        user_2_rate[0] = self.avg[str(number)]
+                    temp += user_1_rate[0] - user_2_rate[0]
+                if not len(users) == 0:
+                    result.append((number, temp/(len(users))))
+        print(result)
 
-        other_anime = self.rating[self.rating['user_id'].isin(users_with_anime)]['anime_id'].values
-        unique_el, counts = np.unique(other_anime, return_counts=True)
-        sorted_indexes = np.argsort(counts)[-100:]  # -counts для сортировки по убыванию
-        self.jaccar_unique_elements = unique_el[sorted_indexes]
-        self.jaccar_counts = counts[sorted_indexes]
-        self.jaccar_counts = self.jaccar_counts/len(self.user_list)
-        self.jaccar_counts /= self.jaccar_counts[-1]
 
-        self.ListAnimeBlocks = []
-        for i in range(len(self.jaccar_counts)):
-            row = self.anime.loc[self.anime['anime_id'] == self.jaccar_unique_elements[i]]
-            if row['name-ru'].isnull().values.any():
-                str_name = list(row['name'])
-            else:
-                str_name = list(row['name-ru'])
-            self.ListAnimeBlocks.append([list(row['src'])[0], str_name[0]])
-        self.change_grid()
-        '''
-
-    def Manhattan(self, user_name):
-        users_with_anime = self.rating[self.rating['user_id'] == user_name]['anime_id']
-        print(users_with_anime)
 
 
     def user_list(self):
@@ -368,7 +353,11 @@ class Ui_MainWindow(object):
                 it = self.user_check_model.item(row, 0)
                 if Qt.Checked == it.checkState() and self.userSelected == '':
                     self.userSelected = it.text()
-                    self.Jaccar_user(int(self.userSelected))
+                    #'Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи", "Коэфициент корелляции Пирсона"
+                    if self.method.currentText() == 'Метод Жаккара':
+                        self.Jaccar_user(int(self.userSelected))
+                    elif self.method.currentText() == 'Расстояние Манхеттена':
+                        self.Manhattan(int(self.userSelected))
                     #self.Manhattan(self.userSelected)
                 elif Qt.Checked == it.checkState() and self.userSelected != '':
                     msg = QMessageBox()
@@ -404,6 +393,9 @@ class Ui_MainWindow(object):
 
         with open('../data/grouping_anime_by_users.json', 'r') as jsonFile:
             self.userlist_anime = json.load(jsonFile)
+
+        with open('../data/средние_оценки.json', 'r') as avgFile:
+            self.avg = json.load(avgFile)
 
         # Читаем датасет
         self.read_dataset()

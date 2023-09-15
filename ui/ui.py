@@ -248,6 +248,49 @@ class Ui_MainWindow(object):
             self.ListAnimeBlocks.append([list(self.anime[self.anime['anime_id'] == int(i)]['src'])[0], list(self.anime[self.anime['anime_id'] == int(i)]['name-ru'])[0]])
         self.change_grid()
 
+    def Cosine(self, user_1):
+        user_list_1 = self.userlist_anime[str(user_1)]
+        result = []
+        for number, values in tqdm(self.userlist_anime.items()):
+            temp = 0
+            temp_A = 0
+            temp_B = 0
+            if number != str(user_1):
+                users = set(values) & set(user_list_1)
+                if len(users) / len(user_list_1) > 0.76:
+                    for i in users:
+                        user_1_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(user_1))]['rating'])
+                        if user_1_rate[0] == -1:
+                            user_1_rate[0] = self.avg[str(i)]
+                        user_2_rate = list(self.rating[(self.rating['anime_id'] == int(i)) & (self.rating['user_id'] == int(number))]['rating'])
+                        if user_2_rate[0] == -1:
+                            user_2_rate[0] = self.avg[str(i)]
+                        temp += user_1_rate[0] * user_2_rate[0]
+                        temp_A += user_1_rate[0]**2
+                        temp_B += user_2_rate[0] ** 2
+                    if not len(users) == 0:
+                        result.append((number, (temp/((temp_A**1/2)*(temp_B**1/2)*len(users))) ))
+        if len(result) == 0:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Warning)
+            msg.setText('Предупреждение')
+            msg.setWindowTitle('Warning')
+            msg.setInformativeText(
+                'Внимание! Не было найдено ни одного пользователя, прошедших порог похожести с вашим профилем!')
+            msg.exec()
+            return
+        min = -10000
+        min_tuple = None
+        for i in result:
+            if min < i[1]:
+                min = i[1]
+                min_tuple = i
+        min = self.userlist_anime[min_tuple[0]]
+        self.ListAnimeBlocks = []
+        for i in min:
+            self.ListAnimeBlocks.append([list(self.anime[self.anime['anime_id'] == int(i)]['src'])[0], list(self.anime[self.anime['anime_id'] == int(i)]['name-ru'])[0]])
+        self.change_grid()
+
     def user_list(self):
         # Скролляцаяся панель со списком пользователей -------------- Уровень 0.1.4
         self.ScrollAreaUsers = QtWidgets.QScrollArea()
@@ -416,6 +459,8 @@ class Ui_MainWindow(object):
                         self.Manhattan(int(self.userSelected))
                     elif self.method.currentText() == 'Евклидово расстояние':
                         self.Euclid(int(self.userSelected))
+                    elif self.method.currentText() == 'Коэфициент Отиаи':
+                        self.Cosine(int(self.userSelected))
                 elif Qt.Checked == it.checkState() and self.userSelected != '':
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Warning)

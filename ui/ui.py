@@ -507,7 +507,7 @@ class Ui_MainWindow(object):
         MainWindow.setEnabled(True)
         MainWindow.setLayoutDirection(QtCore.Qt.LeftToRight)
         MainWindow.setStyleSheet(
-            "QWidget#centralwidget {border-image: url(\"assets/doge.jpg\");}")
+            "QWidget#centralwidget {border-image: url(\"assets/input1.png\");}")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setEnabled(True)
         self.centralwidget.setObjectName("centralwidget")
@@ -687,7 +687,7 @@ class Ui_MainWindow(object):
         self.PlainTextAnime.setPlaceholderText(_translate("MainWindow", "Введите название аниме"))
         self.PlainTextUsers.setPlaceholderText(_translate("MainWindow", "Введите имя пользователя"))
         self.SearchButton.setText(_translate("MainWindow", "Поиск"))
-        self.method.addItems(['Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи", "Коэфициент корелляции Пирсона"])
+        self.method.addItems(['Метод Жаккара', 'Расстояние Манхеттена', "Евклидово расстояние", "Коэфициент Отиаи"])
         self.type.addItems(["User-based", "Item-based", 'Список аниме пользователя'])
 
 
@@ -701,7 +701,7 @@ if __name__ == "__main__":
 
     # Добавляем шансон
     playlist = QMediaPlaylist()
-    url = QUrl.fromLocalFile("assets/audio_1.mp3")
+    url = QUrl.fromLocalFile("assets/audio.mp3")
     playlist.addMedia(QMediaContent(url))
     playlist.setPlaybackMode(QMediaPlaylist.Loop)
     player = QMediaPlayer()
